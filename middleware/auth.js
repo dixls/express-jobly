@@ -66,8 +66,10 @@ function requireAdmin(req, res, next) {
 
 function checkIsThisUserOrAdmin(req, res, next) {
   try {
-    if (res.locals.user.isAdmin || req.params.username == res.locals.user.username) return next();
-    throw new UnauthorizedError();
+    if (!res.locals.user || !res.locals.user.isAdmin && req.params.username !== res.locals.user.username){
+      throw new UnauthorizedError();
+    };
+    return next();
   } catch (err) {
     return next(err);
   }
