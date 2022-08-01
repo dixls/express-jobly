@@ -45,17 +45,17 @@ function sqlForFilteringQuery(filterParams, jsToSql) {
 
   // {firstName: 'Aliya', age: 32} => ['"first_name"=$1', '"age"=$2']
   const cols = keys.map((colName, idx) =>
-    `"${jsToSql[colName].sql || colName}" ${jsToSql[colName].operator || '='} $${idx + 1}`,
+    `${jsToSql[colName].sql || colName} ${jsToSql[colName].operator || '='} $${idx + 1}`,
   );
-  values = keys.map((colName, idx) => {
-    if(colName == "like") {
-      return `%${values[idx]}%`;
+  values = values.map((value, idx) => {
+    if(keys[idx] == "name") {
+      return `%${value.toLowerCase()}%`;
     } else {
-      return values[idx];
+      return value;
     }
   });
   return {
-    setCols: cols.join(", "),
+    setCols: cols.join(" AND "),
     values: values,
   };
 }

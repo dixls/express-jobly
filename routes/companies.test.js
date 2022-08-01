@@ -106,8 +106,9 @@ describe("GET /companies", function () {
         .set("authorization", `Bearer ${u1Token}`);
     expect(resp.statusCode).toEqual(500);
   });
-  test("OK using queries", async () => {
-    const resp = await request(app).get("/companies?minEmployees=2")
+
+  test("OK using minEmployees query", async () => {
+    const resp = await request(app).get("/companies?minEmployees=2");
 
     expect(resp.body).toEqual({
       companies:
@@ -127,6 +128,35 @@ describe("GET /companies", function () {
               logoUrl: "http://c3.img",
             },
           ],
+    });
+  });
+
+  test("OK using name query", async () => {
+    const resp = await request(app).get("/companies?name=c1");
+
+    expect(resp.body).toEqual({
+      companies:
+          [
+            {
+              handle: "c1",
+              name: "C1",
+              description: "Desc1",
+              numEmployees: 1,
+              logoUrl: "http://c1.img",
+            }
+          ],
+    });
+  });
+
+  test("Should return not found error when no results", async () => {
+    const resp = await request(app).get("/companies?name=c3&maxEmployees=2")
+
+    expect(resp.status).toBe(404);
+    expect(resp.body).toEqual({
+      "error": {
+        "message": "No companies found matching those parameters",
+        "status": 404
+      }
     });
   });
 });

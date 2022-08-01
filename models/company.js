@@ -104,8 +104,8 @@ class Company {
         sql: "num_employees",
         operator: "<="
       },
-      nameLike: {
-        sql: "name",
+      name: {
+        sql: "LOWER(name)",
         operator: "like"
       }
     };
@@ -117,11 +117,10 @@ class Company {
                           logo_url as "logoUrl"
                    FROM companies
                    WHERE ${setCols}`;
-    console.log(query);
     const result = await db.query(query, values);
     const companies = result.rows;
 
-    if (!companies) throw new NotFoundError(`No companies found matching those parameters`);
+    if (companies.length === 0) throw new NotFoundError(`No companies found matching those parameters`);
 
     return companies;
   }
