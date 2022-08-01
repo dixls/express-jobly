@@ -42,8 +42,40 @@ function ensureLoggedIn(req, res, next) {
   }
 }
 
+/** Middleware to ensure a use is Admin
+ * 
+ * Requires a logged in user with a token where isAdmin is true
+ * If not, raises Unauthorized
+ * 
+ */
+function requireAdmin(req, res, next) {
+  try {
+    if (res.locals.user.isAdmin) return next();
+    throw new UnauthorizedError();
+  } catch (err) {
+    return next(err);
+  }
+}
+
+/** Middleware to check if a use is either Admin or a specific user
+ * 
+ * Requires a logged in user that matches the user being requested or a used with isAdmin = True
+ * if not, raises Unauthorized
+ * 
+ */
+
+function checkIsThisUserOrAdmin(req, res, next) {
+  try {
+    if (res.locals.user.isAdmin || req.params.username == res.locals.user.username) return next();
+    throw new UnauthorizedError();
+  } catch (err) {
+    return next(err);
+  }
+}
 
 module.exports = {
   authenticateJWT,
   ensureLoggedIn,
+  requireAdmin,
+  checkIsThisUserOrAdmin
 };
