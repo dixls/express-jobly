@@ -159,6 +159,12 @@ describe("GET /companies", function () {
       }
     });
   });
+
+  test("Should error?", async () => {
+    const resp = await request(app).get("/companies?description=Desc1")
+
+    expect(resp.status).toBe(500)
+  });
 });
 
 /************************************** GET /companies/:handle */
