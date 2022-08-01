@@ -50,8 +50,8 @@ function ensureLoggedIn(req, res, next) {
  */
 function requireAdmin(req, res, next) {
   try {
-    if (res.locals.user.isAdmin) return next();
-    throw new UnauthorizedError();
+    if (!res.locals.user || !res.locals.user.isAdmin) throw new UnauthorizedError();
+    return next();
   } catch (err) {
     return next(err);
   }
