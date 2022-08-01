@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForFilteringQuery } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -76,7 +76,7 @@ class Company {
                   description,
                   num_employees AS "numEmployees",
                   logo_url AS "logoUrl"
-           FROM companies
+           FROM companies 
            WHERE handle = $1`,
       [handle]);
 
@@ -96,21 +96,30 @@ class Company {
 
   static async findWith(filterParams) {
     const jsToSql = {
-      minEmployees: "min_employees",
-      maxEmployees: "max_employees",
-      nameLike: "name_like"
+      minEmployees: {
+        sql: "num_employees",
+        operator: ">="
+      },
+      maxEmployees: {
+        sql: "num_employees",
+        operator: "<="
+      },
+      nameLike: {
+        sql: "name",
+        operator: "like"
+      }
     };
-    const {whereClause, values} = sqlForPartialUpdate(filterParams, jsToSql)
+    const {setCols, values} = sqlForFilteringQuery(filterParams, jsToSql)
     const query = `SELECT handle, 
                           name, 
                           description, 
-                          num_employees as numEmployees, 
-                          logo_url as logoUrl
+                          num_employees as "numEmployees", 
+                          logo_url as "logoUrl"
                    FROM companies
-                   WHERE ${whereClause}`;
-    
+                   WHERE ${setCols}`;
+    console.log(query);
     const result = await db.query(query, values);
-    const companies = result.rows[0];
+    const companies = result.rows;
 
     if (!companies) throw new NotFoundError(`No companies found matching those parameters`);
 
