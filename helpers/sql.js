@@ -48,7 +48,7 @@ function sqlForFilteringQuery(filterParams, jsToSql) {
     `${jsToSql[colName].sql || colName} ${jsToSql[colName].operator || '='} $${idx + 1}`,
   );
   values = values.map((value, idx) => {
-    if(keys[idx] == "name") {
+    if (keys[idx] == "name") {
       return `%${value.toLowerCase()}%`;
     } else {
       return value;
@@ -60,4 +60,32 @@ function sqlForFilteringQuery(filterParams, jsToSql) {
   };
 }
 
-module.exports = { sqlForPartialUpdate, sqlForFilteringQuery };
+/**
+ * 
+ * This function takes an object containing data to be inserted,
+ * and an object that contains the name of the js property and the
+ * name of the corresponding db column.
+ * 
+ * returns: {
+ *    colNames: sql names of the columns to insert into.
+ *    args: string of $ arguments to pass corresponding to 
+ *    values: values for parameters being set
+ * }
+ * 
+ */
+function sqlForCreatingJob(data, jsToSql) {
+  const keys = Object.keys(data);
+  const values = Object.values(data);
+  const sqlCols = keys.map((colName) => 
+    `${jsToSql[colName] || colName}`
+  );
+  const args = sqlCols.map((colName, idx) => `$${idx+1}`);
+
+  return {
+    colNames: sqlCols.join(", "),
+    args: args.join(", "),
+    values: values
+  }
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFilteringQuery, sqlForCreatingJob };
