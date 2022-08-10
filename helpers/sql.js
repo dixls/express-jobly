@@ -48,8 +48,10 @@ function sqlForFilteringQuery(filterParams, jsToSql) {
     `${jsToSql[colName].sql || colName} ${jsToSql[colName].operator || '='} $${idx + 1}`,
   );
   values = values.map((value, idx) => {
-    if (keys[idx] == "name") {
+    if (keys[idx] == "name" || keys[idx] == "title") {
       return `%${value.toLowerCase()}%`;
+    } else if (keys[idx] == "hasEquity"){
+      return 0;
     } else {
       return value;
     }

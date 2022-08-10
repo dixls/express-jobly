@@ -22,3 +22,7 @@ const {
   describe("Test /GET '/jobs'", () => {
 
   });
+
+  describe("Test /POST '/jobs'", () => {
+    
+  });
