@@ -67,6 +67,13 @@ describe("findAll", () => {
                 companyHandle: 'c3',
                 salary: null,
                 equity: "0.4",
+            },
+            {
+                id: expect.any(Number),
+                title: 'j3',
+                companyHandle: 'c1',
+                salary: null,
+                equity:null
             }
         ]);
     });
