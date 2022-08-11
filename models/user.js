@@ -125,19 +125,33 @@ class User {
 
   static async get(username) {
     const userRes = await db.query(
-          `SELECT username,
+          `SELECT users.username,
                   first_name AS "firstName",
                   last_name AS "lastName",
                   email,
-                  is_admin AS "isAdmin"
+                  is_admin AS "isAdmin",
+                  a.job_id as "jobId"
            FROM users
-           WHERE username = $1`,
+           LEFT OUTER JOIN applications as a
+           ON a.username = users.username
+           WHERE users.username = $1`,
         [username],
     );
 
-    const user = userRes.rows[0];
+    const userInfo = userRes.rows[0];
 
-    if (!user) throw new NotFoundError(`No user: ${username}`);
+    if (!userInfo) throw new NotFoundError(`No user: ${username}`);
+
+    const jobs = userRes.rows.map(job => job.jobId);
+
+    const user = {
+      username: userInfo.username,
+      firstName: userInfo.firstName,
+      lastName: userInfo.lastName,
+      email: userInfo.email,
+      isAdmin: userInfo.isAdmin,
+      jobs: jobs
+    }
 
     return user;
   }
@@ -203,6 +217,21 @@ class User {
     const user = result.rows[0];
 
     if (!user) throw new NotFoundError(`No user: ${username}`);
+  }
+
+  /** Creates an application for a given user and a given job */
+
+  static async apply(username, id) {
+    const result = await db.query(
+      `INSERT INTO applications
+        (username, job_id)
+        VALUES ($1, $2)
+        RETURNING job_id as "jobId"`,
+        [username, id]
+    );
+    const confirmation = result.rows[0];
+    
+    return confirmation;
   }
 }
 

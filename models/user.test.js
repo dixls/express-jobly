@@ -140,6 +140,9 @@ describe("get", function () {
       lastName: "U1L",
       email: "u1@email.com",
       isAdmin: false,
+      jobs: [
+        null
+      ]
     });
   });
 
@@ -226,5 +229,15 @@ describe("remove", function () {
     } catch (err) {
       expect(err instanceof NotFoundError).toBeTruthy();
     }
+  });
+});
+
+/************************************** apply */
+
+describe("apply", function () {
+  test("works", async function () {
+    const application = await User.apply("u1", "1");
+
+    expect(application).toEqual({jobId: 1});
   });
 });

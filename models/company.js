@@ -81,7 +81,7 @@ class Company {
               j.salary,
               j.equity
            FROM companies 
-           INNER JOIN jobs as j
+           LEFT OUTER JOIN jobs as j
            ON j.company_handle = handle
            WHERE handle = $1`,
       [handle]);
@@ -89,7 +89,6 @@ class Company {
     const companyData = companyRes.rows[0];
 
     if (!companyData) throw new NotFoundError(`No company: ${handle}`);
-    console.log(companyRes.rows);
 
     const jobs = companyRes.rows.map(job => ({
       id: job.id,
