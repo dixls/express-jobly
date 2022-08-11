@@ -39,3 +39,19 @@ router.post("/", async function (req, res, next) {
 /** GET / =>
  *  { jobs: [ { id, title, companyHandle} ]}
  */
+router.get("/", async function (req, res, next) {
+    try {
+        if (Object.keys(req.query).length === 0) {
+            const jobs = await Job.findAll();
+            return res.json({ jobs })
+        } else {
+            const jobs = await Job.findWith(req.query);
+            return res.json({ jobs })
+        }
+    } catch (err) {
+        return next(err);
+    }
+})
+
+
+module.exports = router;
