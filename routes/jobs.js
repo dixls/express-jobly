@@ -10,7 +10,7 @@ const { ensureLoggedIn, requireAdmin } = require("../middleware/auth");
 const Job = require("../models/jobs");
 
 const jobNewSchema = require("../schemas/jobNew.json");
-const jobUpdateSchema =require("../schemas/jobUpdate.json");
+const jobUpdateSchema = require("../schemas/jobUpdate.json");
 
 const router = new express.Router();
 
@@ -22,7 +22,7 @@ const router = new express.Router();
  * 
  * returns 
  */
-router.post("/", async function (req, res, next) {
+router.post("/", requireAdmin, async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, jobNewSchema);
         if (!validator.valid) {
@@ -76,7 +76,7 @@ router.get("/:id", async function (req, res, next) {
  * 
  * Returns { id, title, companyHandle, }
  */
-router.patch("/:id", async function (req, res, next) {
+router.patch("/:id", requireAdmin, async function (req, res, next) {
     try {
         const validator = jsonschema.validate(req.body, jobUpdateSchema);
         if (!validator.valid) {
@@ -86,6 +86,18 @@ router.patch("/:id", async function (req, res, next) {
 
         const job = await Job.update(req.params.id, req.body);
         return res.json({ job });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+/** DELETE /[id] => { deleted : id }
+ * 
+ */
+router.delete("/:id", requireAdmin, async function (req, res, next) {
+    try {
+        await Job.remove(req.params.id);
+        return res.json({ deleted: req.params.id });
     } catch (err) {
         return next(err);
     }

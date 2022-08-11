@@ -161,7 +161,7 @@ describe("Test /POST '/jobs'", () => {
     expect(resp.statusCode).toBe(500);
     expect(resp.body).toEqual({
       error: {
-        message : `insert or update on table \"jobs\" violates foreign key constraint \"jobs_company_handle_fkey\"`,
+        message: `insert or update on table \"jobs\" violates foreign key constraint \"jobs_company_handle_fkey\"`,
         status: 500
       }
     });
@@ -184,7 +184,7 @@ describe("Test GET '/jobs/[id]'", () => {
     });
   });
 
-  test("should error: invalid id", async() => {
+  test("should error: invalid id", async () => {
     const resp = await request(app).get("/jobs/666");
 
     expect(resp.statusCode).toBe(404);
@@ -199,7 +199,7 @@ describe("Test PATCH '/jobs/[id]'", () => {
         title: "test_title",
       })
       .set("authorization", `Bearer ${u1Token}`);
-    
+
     // expect(resp.statusCode).toBe(200);
     expect(resp.body).toEqual({
       job: {
@@ -220,13 +220,51 @@ describe("Test PATCH '/jobs/[id]'", () => {
       })
       .set("authorization", `Bearer ${u1Token}`);
 
-      expect(resp.status).toBe(400);
+    expect(resp.status).toBe(400);
+    expect(resp.body).toEqual({
+      error: {
+        message: [
+          "instance additionalProperty \"companyHandle\" exists in instance when not allowed"
+        ],
+        status: 400
+      }
+    });
+  });
+});
+
+describe("Test DELETE '/jobs/[id]'", () => {
+  test("should pass: valid id & auth", async () => {
+    const resp = await request(app).delete("/jobs/1")
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.status).toBe(200);
+    expect(resp.body).toEqual({
+      deleted: "1"
+    });
+  });
+
+  test("should error: not found", async () => {
+    const resp = await request(app).delete("/jobs/666")
+      .set("authorization", `Bearer ${u1Token}`);
+
+    expect(resp.status).toBe(404);
+    expect(resp.body).toEqual({
+      error: {
+        message: "No job found matching id: 666",
+        status: 404
+      }
+    })
+  });
+
+  test("should error: not admin", async () => {
+    const resp = await request(app).delete("/jobs/1")
+      .set("authorization", `Bearer ${u2Token}`);
+    
+      expect(resp.status).toBe(401);
       expect(resp.body).toEqual({
         error: {
-          message: [
-            "instance additionalProperty \"companyHandle\" exists in instance when not allowed"
-          ],
-          status: 400
+          message: "Unauthorized",
+          status: 401
         }
       });
   });
