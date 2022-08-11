@@ -72,17 +72,40 @@ class Company {
   static async get(handle) {
     const companyRes = await db.query(
       `SELECT handle,
-                  name,
-                  description,
-                  num_employees AS "numEmployees",
-                  logo_url AS "logoUrl"
+              name,
+              description,
+              num_employees AS "numEmployees",
+              logo_url AS "logoUrl",
+              j.id,
+              j.title,
+              j.salary,
+              j.equity
            FROM companies 
+           INNER JOIN jobs as j
+           ON j.company_handle = handle
            WHERE handle = $1`,
       [handle]);
 
-    const company = companyRes.rows[0];
+    const companyData = companyRes.rows[0];
 
-    if (!company) throw new NotFoundError(`No company: ${handle}`);
+    if (!companyData) throw new NotFoundError(`No company: ${handle}`);
+    console.log(companyRes.rows);
+
+    const jobs = companyRes.rows.map(job => ({
+      id: job.id,
+      title: job.title,
+      salary: job.salary,
+      equity: job.equity
+    }))
+
+    const company = {
+      handle: companyData.handle,
+      name: companyData.name,
+      description: companyData.description,
+      numEmployees: companyData.numEmployees,
+      logoUrl: companyData.logoUrl,
+      jobs: jobs
+    }
 
     return company;
   }
@@ -109,7 +132,7 @@ class Company {
         operator: "like"
       }
     };
-    const {setCols, values} = sqlForFilteringQuery(filterParams, jsToSql)
+    const { setCols, values } = sqlForFilteringQuery(filterParams, jsToSql)
     const query = `SELECT handle, 
                           name, 
                           description, 
