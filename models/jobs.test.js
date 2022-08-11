@@ -146,3 +146,77 @@ describe("findWith", () => {
     });
 
 });
+
+describe("test get", () => {
+    test("should pass", async () => {
+        const jobs = await Job.findAll();
+        const jobToFind = jobs[0]
+        const job = await Job.get(jobToFind.id);
+
+        expect(job).toEqual({
+            companyHandle: "c1",
+            equity: "0.1",
+            id: expect.any(Number),
+            salary: 100000,
+            title: "j1"
+        });
+    });
+
+    test("should fail: not found", async () => {
+        try {
+            const job = await Job.get(666);
+        } catch (err) {
+            expect(err.status).toEqual(404);
+        }
+    });
+});
+
+describe("test update", () => {
+    test("should pass: update job with appropriate params", async () => {
+        const job = await Job.update(1, {
+            title: "test_update"
+        });
+
+        expect(job).toEqual({
+            id: 1,
+            title: "test_update",
+            companyHandle: "c1",
+            salary: 100000,
+            equity: "0.1"
+        });
+    });
+    test("should error: not found job", async () => {
+        try{
+            const job = await Job.update(666, {
+                title: "test_update"
+            });
+        } catch (err) {
+            expect(err.status).toBe(404);
+        }
+    });
+});
+
+describe("test remove", () => {
+    test("should pass: delete job that exists", async () => {
+        const jobs = await Job.findAll();
+        const job = jobs[0];
+
+        const delJob = await Job.remove(job.id);
+
+        expect(delJob).toBe(true);
+        try {
+            const deletedJob = await Job.get(job.id);
+        } catch (err) {
+            expect(err.status).toBe(404);
+        }
+    });
+
+    test("should error: delete job that does not exist", async () => {
+        try {
+            const delJob = await Job.remove(666);
+        } catch (err) {
+            expect(err.status).toBe(404);
+        }
+
+    })
+});

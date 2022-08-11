@@ -22,7 +22,6 @@ afterAll(commonAfterAll);
 describe("Test /GET '/jobs'", () => {
   test("should pass: get all jobs, no filters", async () => {
     const resp = await request(app).get("/jobs");
-    console.log(resp);
     expect(resp.statusCode).toEqual(200);
     expect(resp.body).toEqual({
       jobs: [
@@ -91,6 +90,7 @@ describe("Test /POST '/jobs'", () => {
         salary: 200000,
         equity: .2
       })
+      .set("authorization", `Bearer ${u1Token}`);
 
     expect(resp.statusCode).toEqual(201);
     expect(resp.body).toEqual({
@@ -111,7 +111,8 @@ describe("Test /POST '/jobs'", () => {
         title: "test_job2",
         companyHandle: "c1",
         equity: .3
-      });
+      })
+      .set("authorization", `Bearer ${u1Token}`);
 
     expect(resp.statusCode).toEqual(201);
     expect(resp.body).toEqual({
@@ -133,6 +134,7 @@ describe("Test /POST '/jobs'", () => {
         salary: 100,
         equity: .2
       })
+      .set("authorization", `Bearer ${u1Token}`);
 
     expect(resp.statusCode).toBe(400);
     expect(resp.body).toEqual({
@@ -153,7 +155,8 @@ describe("Test /POST '/jobs'", () => {
         companyHandle: "not_a_co",
         salary: 100,
         equity: .2
-      });
+      })
+      .set("authorization", `Bearer ${u1Token}`);
 
     expect(resp.statusCode).toBe(500);
     expect(resp.body).toEqual({
@@ -161,6 +164,70 @@ describe("Test /POST '/jobs'", () => {
         message : `insert or update on table \"jobs\" violates foreign key constraint \"jobs_company_handle_fkey\"`,
         status: 500
       }
-    })
-  })
+    });
+  });
+});
+
+describe("Test GET '/jobs/[id]'", () => {
+  test("should pass: valid id", async () => {
+    const resp = await request(app).get("/jobs/1");
+
+    expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({
+      job: {
+        id: 1,
+        title: "j1",
+        companyHandle: "c1",
+        salary: 100000,
+        equity: "0.1"
+      }
+    });
+  });
+
+  test("should error: invalid id", async() => {
+    const resp = await request(app).get("/jobs/666");
+
+    expect(resp.statusCode).toBe(404);
+  });
+});
+
+describe("Test PATCH '/jobs/[id]'", () => {
+  test("should pass: appropriate parameters for update", async () => {
+    const resp = await request(app)
+      .patch("/jobs/1")
+      .send({
+        title: "test_title",
+      })
+      .set("authorization", `Bearer ${u1Token}`);
+    
+    // expect(resp.statusCode).toBe(200);
+    expect(resp.body).toEqual({
+      job: {
+        id: 1,
+        title: "test_title",
+        companyHandle: "c1",
+        salary: 100000,
+        equity: "0.1"
+      }
+    });
+  });
+
+  test("should error: changing companyHandle not allowed", async () => {
+    const resp = await request(app)
+      .patch("/jobs/1")
+      .send({
+        companyHandle: "c2"
+      })
+      .set("authorization", `Bearer ${u1Token}`);
+
+      expect(resp.status).toBe(400);
+      expect(resp.body).toEqual({
+        error: {
+          message: [
+            "instance additionalProperty \"companyHandle\" exists in instance when not allowed"
+          ],
+          status: 400
+        }
+      });
+  });
 });

@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForCreatingJob, sqlForFilteringQuery } = require("../helpers/sql");
+const { sqlForCreatingJob, sqlForFilteringQuery, sqlForPartialUpdate } = require("../helpers/sql");
 
 class Job {
     /** Create a job from data, update db, return new job data.
@@ -82,6 +82,80 @@ class Job {
         if (jobs.length === 0) throw new NotFoundError(`No Jobs found with those parameters`);
 
         return jobs;
+    }
+
+    /** Get given job based on id
+     * 
+     * returns: {job: {id, title, companyHandle, salary, equity}}
+     * 
+     * Throws NotFoundError if job not found
+     */
+
+    static async get(id) {
+        const result = await db.query(
+            `SELECT id,
+                    title,
+                    company_handle as "companyHandle",
+                    salary,
+                    equity
+                FROM jobs
+                WHERE id = $1`,
+                [id]);
+        const job = result.rows[0];
+        
+        if (!job) throw new NotFoundError(`No job found matching id: ${id}`);
+
+        return job;
+    }
+
+    /** Update given job based on id
+     * 
+     * returns updated job: {job: id, title, companyHandle, salary, equity}
+     * 
+     * Throws NotFoundError if job not found.
+     */
+
+    static async update(id, data) {
+        const {setCols, values } = sqlForPartialUpdate(
+            data,
+            {
+                companyHandle: "company_handle",
+            });
+        const handleVarIdx = "$" + (values.length + 1);
+
+        const querySql = `UPDATE jobs
+                          SET ${setCols}
+                          WHERE id = ${handleVarIdx}
+                          RETURNING id,
+                                    title,
+                                    company_handle as "companyHandle",
+                                    salary,
+                                    equity`;
+        const result = await db.query(querySql, [...values, id]);
+        const job = result.rows[0];
+
+        if (!job) throw new NotFoundError(`No Job found matching id: ${id}`);
+
+        return job;
+    }
+
+    /** Delete given job from database; returns True
+     * 
+     * Throws NotFoundError if job not found.
+     */
+
+    static async remove(id) {
+        const result = await db.query(
+            `DELETE
+                FROM jobs
+                WHERE id = $1
+                returning id`,
+                [id]);
+        const job = result.rows[0];
+
+        if (! job) throw new NotFoundError(`No job found matching id: ${id}`);
+
+        return true;
     }
 }
 
