@@ -143,13 +143,10 @@ class User {
     if (!userInfo) throw new NotFoundError(`No user: ${username}`);
 
     const jobs = userRes.rows.map(job => job.jobId);
+    delete userInfo.jobId
 
     const user = {
-      username: userInfo.username,
-      firstName: userInfo.firstName,
-      lastName: userInfo.lastName,
-      email: userInfo.email,
-      isAdmin: userInfo.isAdmin,
+      ...userInfo,
       jobs: jobs
     }
 
